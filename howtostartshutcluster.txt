@@ -1,0 +1,57 @@
+For jenkins: Make sure to use jenkins/jenkins repository instead of using the depreciated repos.
+Make sure you mount the /var/run/docker.sock onto to the container.
+
+
+Inside jenkins container, you need to do following tasks:
+1. Change the owner of the file /var/run/docker.sock -> Jenkins 
+		chown jenkins /va/run/docker.sock
+
+2. Install docker.( URL: https://getintodevops.com/blog/the-simple-way-to-run-docker-in-docker-for-ci)
+
+apt-get update && \
+apt-get -y install apt-transport-https \
+     ca-certificates \
+     curl \
+     gnupg2 \
+     software-properties-common && \
+curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
+add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
+   $(lsb_release -cs) \
+   stable" && \
+apt-get update && \
+apt-get -y install docker-ce
+
+
+3. Install awscli on the jenkinserver container
+		apt-get install awscli
+
+4. Congfigure aws cli. 
+		$aws configure
+			->	Add the Access Key & Secret Key.
+			->	Add default region
+5. Now we will be create a jenkins job to start/stop a cluster
+
+https://cubeangle.com/aws-resource-groups/ -- Shut/Start cluster using resource group
+
+Some awscli commands.
+
+	5.1. Command to list down the instance ids of all the instances belonging to a particular 		     resource group.
+Syntax:
+
+aws resource-groups list-group-resources --group-name <<Resource-Group-Name>> | grep ResourceArn | cut -d "/" -f 2 | tr '\n' ' ' | sed -r 's/\",/ /g'
+
+Example:
+
+aws resource-groups list-group-resources --group-name rg-t3001-dev | grep ResourceArn | cut -d "/" -f 2 | tr '\n' ' ' | sed -r 's/\",/ /g'
+
+	5.2. Command to stop of instances belonging to particular resource group.
+
+Syntax:
+
+aws ec2 stop-instances --instance-ids $(aws resource-groups list-group-resources --group-name <<Resource-Group-Name>> | grep ResourceArn | cut -d "/" -f 2 | tr '\n' ' ' | sed -r 's/\",/ /g')
+
+Example:
+aws ec2 stop-instances --instance-ids $(aws resource-groups list-group-resources --group-name rg-t3001-dev | grep ResourceArn | cut -d "/" -f 2 | tr '\n' ' ' | sed -r 's/\",/ /g')
+
+
