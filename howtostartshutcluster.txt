@@ -25,6 +25,16 @@ apt-get -y install docker-ce
 
 3. Install awscli on the jenkinserver container
 		apt-get install awscli
+By default, the version of awscli is old. You need to upgrade the version to the latest one.
+Step: 1 - To upgrade, you need to have python installed 
+		apt-get install python3-pipe
+		pipe3 install --upgrade awscli
+		restart the server.
+
+Step 2: - Or use the below commands:
+		$ curl "https://s3.amazonaws.com/aws-cli/awscli-bundle.zip" -o "awscli-bundle.zip"
+		$ unzip awscli-bundle.zip
+		$ sudo ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws
 
 4. Congfigure aws cli. 
 		$aws configure
@@ -47,6 +57,8 @@ aws resource-groups list-group-resources --group-name rg-t3001-dev | grep Resour
 
 	5.2. Command to stop of instances belonging to particular resource group.
 
+Note: In some linux flavours while using sed make sure double quotes are getting removed. 
+In debian, / before " is not required. So, the command is sed -r 's/",/ /g'
 Syntax:
 
 aws ec2 stop-instances --instance-ids $(aws resource-groups list-group-resources --group-name <<Resource-Group-Name>> | grep ResourceArn | cut -d "/" -f 2 | tr '\n' ' ' | sed -r 's/\",/ /g')
